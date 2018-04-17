@@ -12,6 +12,7 @@ from keras.regularizers import l2
 from keras.optimizers import SGD
 from keras.preprocessing import image as pre_image
 from make_hdf5_for_market1501 import get_image_path_list, get_data_for_cmc
+import time
 
 def model_def(flag=0, weight_decay=0.0005):
     '''
@@ -336,7 +337,7 @@ def random_test(model, user_name = 'lpc', num = 10):
         return np.array(A)/255.,np.array(B)/255.
     
     A,B = random_select_pos(f, user_name, num)
-    return model.predict([A,B],batch_size = 100)[:,1]
+    return model.predict([A,B],batch_size = 150)[:,1]
    
 def cmc(model):
     
@@ -364,12 +365,12 @@ def cmc(model):
     a,b = get_data_for_cmc()
     return cmc_curve(model,a,b)
 
-def train(model,weights_name='weights_on_market1501_0_0',train_num=100,one_epoch=300,epoch_num=1,flag_random=False,random_pattern=lambda x:x/2+0.5, flag_train=0,flag_val=1,nb_val_samples=1000,user_name='workspace'):
+def train(model,weights_name='weights_on_market1501_0_0',train_num=100,one_epoch=30000,epoch_num=1,flag_random=False,random_pattern=lambda x:x/2+0.5, flag_train=0,flag_val=1,nb_val_samples=1000,user_name='workspace'):
     with h5py.File('market1501_positive_index.h5','r') as f:
         Data_Generator = ImageDataGenerator_for_multiinput(width_shift_range=0.05,height_shift_range=0.05)
         Rank1s = []
         for i in xrange(train_num):
-            print 'number',i,'in',train_num
+            print 'number',i,'in',train_num,' timestamp:',time.time()
             if flag_random:
                 rand_x = np.random.rand()
                 flag_train = random_pattern(rand_x)
@@ -390,7 +391,9 @@ if __name__ == '__main__':
     user_name = 'workspace'
     #user_name = raw_input('please input your system user name:')
     model = model_def()
-    print 'model definition done.'
+    print 'model definition done. timestamp:',time.time()
     model = compiler_def(model)
-    print 'model compile done.'
+    print 'model compile done. timestamp:',time.time()
+    #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
+    #sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
     rank1s = train(model)
