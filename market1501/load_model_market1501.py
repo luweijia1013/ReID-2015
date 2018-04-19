@@ -321,22 +321,31 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
         return X
 
     
-def random_test(model, user_name = 'lpc', num = 10):
-    
-    def random_select_pos(user_name, num):
+def random_test(model, user_name = 'workspace', num = 1):
+   with h5py.File('market1501_positive_index.h5','r') as f: 
+    def random_select_pos( f, user_name, num):
         indexs = list(np.random.choice(range(f['test'].shape[0]),num))
         A = []
         B = []
         for index in indexs:
             path1 = f['test'][index,0]
             path2 = f['test'][index,1]
-            print path1[0:7], path2[0:7]
+            print path1, path2
             A.append(np.array(Image.open('/home/' + user_name + '/market-1501/boundingboxtest/' + path1)))
             B.append(np.array(Image.open('/home/' + user_name + '/market-1501/boundingboxtest/' + path2)))
             
         return np.array(A)/255.,np.array(B)/255.
     
     A,B = random_select_pos(f, user_name, num)
+    return model.predict([A,B],batch_size = 75)[:,1]
+
+def specific_test(model, path1, path2, user_name = 'workspace'):
+    A_Ori = []
+    B_Ori = []
+    A_Ori.append(np.array(Image.open('/home/'+ user_name + '/market-1501/boundingboxtest/' + path1)))
+    B_Ori.append(np.array(Image.open('/home/'+ user_name + '/market-1501/boundingboxtest/' + path2)))
+    A = np.array(A_Ori)/255.
+    B = np.array(B_Ori)/255.
     return model.predict([A,B],batch_size = 75)[:,1]
    
 def cmc(model):
@@ -387,7 +396,6 @@ def train(model,weights_name='weights_on_market1501_0_0',train_num=100,one_epoch
         return Rank1s
 
 if __name__ == '__main__':
-    print 'START! TIME: ',time.localtime(time.time())
     print 'default dim order is:',K.image_dim_ordering()
     user_name = 'workspace'
     #user_name = raw_input('please input your system user name:')
@@ -396,6 +404,12 @@ if __name__ == '__main__':
     model = compiler_def(model)
     print 'model compile done. timestamp:',time.time()
     #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
-    #sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-    rank1s = train(model)
-    print 'FINISH! TIME: ',time.localtime(time.time())
+    #sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)
+    for i in xrange(100):
+	model.load_weights('weights_75batchsize/weights_on_market1501_0_0_'+str(i)+'.h5')
+    print 'model load weights done. timestamp:',time.time()
+    #result = random_test(model)
+    path1 = '1501_c6s4_001902_01'
+    path2 = '1501_c2s3_069127_04'
+    result = specific_test(model, path1 +'.jpg', path2 + '.jpg')
+    print result
