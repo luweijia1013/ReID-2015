@@ -348,6 +348,22 @@ def specific_test(model, path1, path2, user_name = 'workspace'):
     B = np.array(B_Ori)/255.
     return model.predict([A,B],batch_size = 75)[:,1]
    
+ 
+def self_test(model, path1, path2, user_name = 'workspace'):
+    A_Ori = []
+    B_Ori = []
+    image_one = Image.open('/home/'+ user_name + '/market-1501/myselftest/' + path1)
+    image_two = Image.open('/home/'+ user_name + '/market-1501/myselftest/' + path2)
+    print '**** IMAGE ONE:',path1,'SIZE:',image_one.size,'MODE:',image_one.mode
+    print '**** IMAGE TWO:',path2,'SIZE:',image_two.size,'MODE:',image_two.mode
+    image_one = image_one.resize((64,128)).convert('RGB')
+    image_two = image_two.resize((64,128)).convert('RGB')
+    A_Ori.append(np.array(image_one))
+    B_Ori.append(np.array(image_two))
+    A = np.array(A_Ori)/255.
+    B = np.array(B_Ori)/255.
+    return model.predict([A,B],batch_size = 75)[:,1]
+   
 def cmc(model):
     
     def cmc_curve(model, camera1, camera2, rank_max=50):
@@ -409,7 +425,7 @@ if __name__ == '__main__':
 	model.load_weights('weights_75batchsize/weights_on_market1501_0_0_'+str(i)+'.h5')
     print 'model load weights done. timestamp:',time.time()
     #result = random_test(model)
-    path1 = '1501_c6s4_001902_01'
-    path2 = '1501_c2s3_069127_04'
-    result = specific_test(model, path1 +'.jpg', path2 + '.jpg')
-    print result
+    path1 = 'ob_001'
+    path2 = 'ob_005'
+    result = self_test(model, path1 +'.png', path2 + '.png')
+    print '**** RESULT:',result
