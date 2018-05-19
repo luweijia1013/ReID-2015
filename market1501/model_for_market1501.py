@@ -320,24 +320,6 @@ class ImageDataGenerator_for_multiinput(pre_image.ImageDataGenerator):
         X = aX
         return X
 
-    
-def random_test(model, user_name = 'lpc', num = 10):
-    
-    def random_select_pos(user_name, num):
-        indexs = list(np.random.choice(range(f['test'].shape[0]),num))
-        A = []
-        B = []
-        for index in indexs:
-            path1 = f['test'][index,0]
-            path2 = f['test'][index,1]
-            print path1[0:7], path2[0:7]
-            A.append(np.array(Image.open('/home/' + user_name + '/market-1501/boundingboxtest/' + path1)))
-            B.append(np.array(Image.open('/home/' + user_name + '/market-1501/boundingboxtest/' + path2)))
-            
-        return np.array(A)/255.,np.array(B)/255.
-    
-    A,B = random_select_pos(f, user_name, num)
-    return model.predict([A,B],batch_size = 75)[:,1]
    
 def cmc(model):
     

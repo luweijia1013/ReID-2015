@@ -30,8 +30,8 @@ def make_positive_index_market1501(train_or_test = 'train',user_name = 'workspac
 def make_test_hdf5(user_name='workspace'):
     with h5py.File('test.h5') as f:
         path_list = get_image_path_list(train_or_test='test')
-        i = path_list[0][0:4]
-        c = path_list[0][6]
+        i = path_list[0][0:4]   #id
+        c = path_list[0][6]     #camera
         temp = []
         fi = f.create_group(i)
         for path in path_list:
@@ -58,6 +58,13 @@ def make_test_hdf5(user_name='workspace'):
                 temp = []
                 temp.append(np.array(Image.open(
                     '/home/' + user_name + '/market-1501/boundingboxtest/' + path)))
+        ## there should still be some content in temp which is not stored into hdf5 file
+
+def make_selftest_hdf5(user_name='workspace'):
+    with h5py.File('selftest.h5') as f:
+        path_list = get_image_path_list(train_or_test = 'selftest')
+        i = path_list[0][0:2]
+        ## TO BE DONE (rule of naming)
 
 
 def get_image_path_list(train_or_test = 'train', system_user_name = 'workspace'):
@@ -67,6 +74,8 @@ def get_image_path_list(train_or_test = 'train', system_user_name = 'workspace')
         folder_path = '/home/' + system_user_name + '/market-1501/boundingboxtest'
     elif train_or_test == 'query':
         folder_path = '/home/' + system_user_name + '/market-1501/query'
+    elif train_or_test == 'selftest':
+        folder_path = 'home/' + system_user_name + '/market-1501/myselftest'
     assert os.path.isdir(folder_path)
     if train_or_test == 'train' or train_or_test == 'query':
         candidate = sorted(os.listdir(folder_path))
@@ -78,7 +87,16 @@ def get_image_path_list(train_or_test = 'train', system_user_name = 'workspace')
             del candidate[index]
             return candidate
     elif train_or_test == 'test':
-        candidate = sorted(os.listdir(folder_path))[6617:]   #6617?
+        candidate = sorted(os.listdir(folder_path))[6617:]   #6617?  id which is 0000 or -1 is excluded
+        try:
+            index = candidate.index('Thumbs.db')
+        except ValueError:  # no 'Thumbs.db' in folder
+            return candidate
+        else:
+            del candidate[index]
+            return candidate
+    elif train_or_test = 'selftest':
+        candidate = sorted(os.listdir(folderpath))
         try:
             index = candidate.index('Thumbs.db')
         except ValueError:  # no 'Thumbs.db' in folder
@@ -94,8 +112,8 @@ def get_data_for_cmc(user_name = 'workspace'):
         id_list = f.keys()
         for i in id_list:
             c_list = f[i].keys()
-            c1,c2 = np.random.choice(c_list,2)
-            A.append(f[i][c1][np.random.randint(f[i][c1].shape[0])])
+            c1,c2 = np.random.choice(c_list,2)                          #randomly choose two cameras for every id
+            A.append(f[i][c1][np.random.randint(f[i][c1].shape[0])])    #randomly choose one pic from each camera
             B.append(f[i][c2][np.random.randint(f[i][c2].shape[0])])
         return np.array(A)/255.,np.array(B)/255.
 
